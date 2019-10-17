@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import os
 import sys
@@ -11,7 +9,20 @@ import numpy as np
 
 #----------------------------------------------------------------------
 
-def init_cam(camera):
+def init_cam():
+	asi.init(".\\ASICamera2.dll")
+
+	num_cameras = asi.get_num_cameras()
+	if num_cameras == 0:
+		print('No cameras found')
+		sys.exit(0)
+
+	cameras_found = asi.list_cameras()  # Models names of the connected cameras
+	camera_id = 0
+
+	camera = asi.Camera(camera_id)
+
+
 	camera.disable_dark_subtract()
 	camera.set_control_value(asi.ASI_BANDWIDTHOVERLOAD, 60)
 
@@ -25,31 +36,14 @@ def init_cam(camera):
 	camera.set_control_value(asi.ASI_COOLER_ON, 1)
 	camera.set_control_value(asi.ASI_HARDWARE_BIN, 1)
 	camera.set_roi(bins=4)
+	return camera
 
 #----------------------------------------------------------------------
 
 
-asi.init(".\\ASICamera2.dll")
-
-num_cameras = asi.get_num_cameras()
-if num_cameras == 0:
-	print('No cameras found')
-	sys.exit(0)
-
-cameras_found = asi.list_cameras()  # Models names of the connected cameras
-camera_id = 0
-
-camera = asi.Camera(camera_id)
-
-init_cam(camera)
-
-
+camera = init_cam()
 
 camera.set_image_type(asi.ASI_IMG_RAW16)
-
-
-
-print(camera.get_control_value(asi.ASI_TARGET_TEMP))
 
 for i in range(100):
 	print(camera.get_control_value(asi.ASI_TEMPERATURE))
