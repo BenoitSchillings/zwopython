@@ -53,7 +53,7 @@ def init_cam():
 	camera.set_control_value(asi.ASI_TARGET_TEMP, -10)
 	camera.set_control_value(asi.ASI_COOLER_ON, 1)
 	camera.set_control_value(asi.ASI_HARDWARE_BIN, 1)
-	camera.set_roi(bins=2)
+	camera.set_roi(bins=3)
 	camera.set_image_type(asi.ASI_IMG_RAW16)
 
 	return camera
@@ -70,6 +70,7 @@ def set_params(camera, params):
 		if (param == 'GAIN'):
 			camera.set_control_value(asi.ASI_GAIN, int(value))
 		if (param == 'BIN'):
+			print("bin", value)
 			camera.set_roi(bins=int(value))
 		
 
