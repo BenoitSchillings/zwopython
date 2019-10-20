@@ -52,6 +52,12 @@ def status(pos, image, legend, value):
 
 #--------------------------------------------------------
 import argparse
+#--------------------------------------------------------
+
+def bin(arr, new_shape):
+	return arr
+
+#--------------------------------------------------------
 
 
 frame = 0
@@ -72,7 +78,7 @@ def mainloop(args):
 		vmax = np.max(img)
 
 
-		viewer.setImage(np.swapaxes(img, 0, 1))
+		viewer.setImage(bin(np.swapaxes(img, 0, 1), 3))
 		
 
 		#cv2.imshow("image", img)
