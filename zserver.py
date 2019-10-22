@@ -39,7 +39,7 @@ def init_cam():
 	camera_id = 0
 
 	camera = asi.Camera(camera_id)
-
+	print("found camera")
 
 	camera.disable_dark_subtract()
 	camera.set_control_value(asi.ASI_BANDWIDTHOVERLOAD, 60)
@@ -50,17 +50,22 @@ def init_cam():
 	camera.set_control_value(asi.ASI_BRIGHTNESS, 50)
 	camera.set_control_value(asi.ASI_FLIP, 0)
 	camera.set_control_value(asi.ASI_FLIP, 0)
-	camera.set_control_value(asi.ASI_TARGET_TEMP, -10)
+	camera.set_control_value(asi.ASI_TARGET_TEMP, -16)
 	camera.set_control_value(asi.ASI_COOLER_ON, 1)
 	camera.set_control_value(asi.ASI_HARDWARE_BIN, 1)
 	camera.set_roi(bins=3)
 	camera.set_image_type(asi.ASI_IMG_RAW16)
-
+	print("ready")
 	return camera
 
 #-------------------------------------------------------
 
 def set_params(camera, params):
+	def clip8(value):
+		value = value - (value % 8)
+		return value
+
+
 	for param in params:
 		value = params[param]
 		param = param.upper()
@@ -72,6 +77,14 @@ def set_params(camera, params):
 		if (param == 'BIN'):
 			print("bin", value)
 			camera.set_roi(bins=int(value))
+		if (param == 'CROP'):
+			vsize = 3520
+			hsize = 4656
+			dv = int(vsize * value)
+			dh = int(hsize * value)
+			dv = dv // 2
+			dh = dh // 2
+			camera.set_roi(start_x=clip8(hsize//2 - dh), start_y=clip8(vsize//2 - dv), width=clip8(dh*2), height=clip8(dv*2))
 		
 
 #-------------------------------------------------------
@@ -87,6 +100,7 @@ def server(socket, camera):
 
 #-------------------------------------------------------
 
+print("server")
 acamera = init_cam()
 context = zmq.Context()
 socket = context.socket(zmq.REP)

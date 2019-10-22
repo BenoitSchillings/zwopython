@@ -18,6 +18,15 @@ def crop_center(img,crop):
 
 #--------------------------------------------------------
 
+def sharpness(img):
+	v1 = np.sum(np.diff(img, axis=0)**2)
+	v2 = np.sum(np.diff(img, axis=1)**2)
+
+	return(v1+v2)
+
+
+#--------------------------------------------------------
+
 files = glob(sys.argv[1])
 
 def fn(idx):
@@ -28,13 +37,30 @@ frame = 0
 img0 = fits.getdata(fn(0), ext=0)
 sum = np.empty_like(img0, dtype=float)
 
+flat = fits.getdata("flat.fits", ext=0)
+bias = fits.getdata("bias.fits", ext=0)
+dark = fits.getdata("dark.fits", ext=0)
+
+img_prop = [('idx', int), ('dx', float), ('dy', float), ('delta', float), ('name', str)]
+images_prop = np.array([], dtype=img_prop) 
+
 
 for frame in range(0,len(files)):
 	img = fits.getdata(fn(frame), ext=0)
-	frame = frame + 1
+	img = img - dark
+	img = img / flat
+
 	yoff,xoff = image_registration.cross_correlation_shifts(crop_center(img, 1024), crop_center(img0, 1024))
-	#shifted = image_registration.fft_tools.shift.shiftnd(img, (xoff,yoff))
 	shifted = np.roll(np.roll(img,int(yoff),1),int(xoff),0)
+
+	delta = sharpness(crop_center(img, 1024))
+	print(delta)
+	
+	element = [(frame, xoff, yoff, -delta, fn(frame))]
+	images_prop = np.append(images_prop, np.array(element, dtype=img_prop))
+
+	frame = frame + 1
+
 	sum +=  shifted
 	print(yoff,xoff)
 	img = sum / 65535.0
@@ -47,7 +73,36 @@ for frame in range(0,len(files)):
 	key = cv2.waitKey(1)
 
 
-hdr = fits.header.Header()
-fits.writeto("stack.fits", img.astype(np.float32), hdr, overwrite=True)
+#stack 90 % of frames
+sum = np.empty_like(img0, dtype=float)
+images_prop = np.sort(images_prop, order='delta')
+print(images_prop)
 
+
+
+for frame in range(0,int(len(files)*0.9)):
+	img = fits.getdata(fn(images_prop[frame][0]), ext=0)
+	img = img - dark
+	img = img / flat
+
+	shifted = np.roll(np.roll(img,int(round(images_prop[frame][2])),1),int(round(images_prop[frame][1])),0)
+
+	frame = frame + 1
+
+	sum +=  shifted
+	img = sum / 65535.0
+	img = img - np.percentile(img, 3)
+	max = np.percentile(img, 90) * 2.0
+	img = img / max
+
+
+	cv2.imshow("image", crop_center(img, 1024))
+	key = cv2.waitKey(1)
+
+
+
+
+hdr = fits.header.Header()
+fits.writeto("stack_na.fits", img.astype(np.float32), hdr, overwrite=True)
+cv2.waitKey(0)
 

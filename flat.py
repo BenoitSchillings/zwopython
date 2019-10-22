@@ -16,7 +16,7 @@ app = QtGui.QApplication([])
 
 def pool_get(socket):
 	while(True):
-		count = socket.poll(timeout=50)
+		count = socket.poll(timeout=100)
 		app.processEvents()
 		if (count != 0):
 			obj = socket.recv_pyobj()
@@ -54,21 +54,8 @@ def status(pos, image, legend, value):
 import argparse
 #--------------------------------------------------------
 
-def bin(a, bin_factor):
-	shape = a.shape
-	s0 = a.shape[0] // bin_factor
-	s1 = a.shape[1] // bin_factor
-	sh = s0,a.shape[0]//s0,s1,a.shape[1]//s1
-	return a.reshape(sh).sum(-1).sum(1)
-
-
-#--------------------------------------------------------
-
-def crop_center(img,crop):
-    y,x = img.shape
-    startx = x//2 - crop//2
-    starty = y//2 - crop//2    
-    return img[starty:starty+crop, startx:startx+crop]
+def bin(arr, new_shape):
+	return arr
 
 #--------------------------------------------------------
 
@@ -79,38 +66,34 @@ def mainloop(args):
 	print(args)
 	frame = 0
 	viewer = pg.image(np.zeros((10,10)))
-	center_viewer = pg.image(np.zeros((10,10)))
 
-	while(True):
+	while(frame < args.count):
 		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
 
-		if (args.filename != ''):
-			hdr = fits.header.Header()
-			fits.writeto(args.filename + str(frame) + ".fits", img, hdr, overwrite=True)
 		frame = frame + 1
 		vmin = np.min(img)
 		vmax = np.max(img)
+		viewer.setImage(bin(np.swapaxes(img, 0, 1), 3))
+		if (frame == 1):
+			flat_sum = img * 1.0
+		else:
+			flat_sum = flat_sum + img
 
-
-		viewer.setImage(np.swapaxes(img, 0, 1))
-		center_viewer.setImage(crop_center(np.swapaxes(img, 0, 1), 768))
-
-		#cv2.imshow("image", img)
-		#key = cv2.waitKey(1)
-		#print(key)
-		#if (key == 27 or frame >= args.count):
-		#	camera.close()
-		#	return
+	flat_sum = flat_sum / (frame*1.0)
+	if (args.filename != ''):
+		hdr = fits.header.Header()
+		fits.writeto(args.filename + str(frame) + ".fits", flat_sum.astype(np.float32), hdr, overwrite=True)
+		
 
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--filename", type=str, default = '', help="generic file name")
-	parser.add_argument("-exp", type=float, default = 1.0, help="exposure in seconds (default 1.0)")
-	parser.add_argument("-gain", "--gain", type=int, default = 200, help="camera gain (default 200)")
+	parser.add_argument("-exp", "--exp", type=float, default = 1.0, help="exposure in seconds (default 1.0)")
+	parser.add_argument("-gain", "--gain", type=int, default = 10, help="camera gain (default 200)")
 	parser.add_argument("-bin", "--bin", type=int, default = 1, help="camera binning (default 1-6)")
 	parser.add_argument("-guide", "--guide", type=int, default = 0, help="frame per guide cycle (0 to disable)")
-	parser.add_argument("-count", "--count", type=int, default = 1000, help="number of frames to capture")
+	parser.add_argument("-count", "--count", type=int, default = 10, help="number of frames to capture")
 	args = parser.parse_args()
 
 	mainloop(args)

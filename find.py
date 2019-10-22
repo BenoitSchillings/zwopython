@@ -39,7 +39,7 @@ zwocam.connect("tcp://localhost:5555")
 
 frame = 0
 while(True):
-	img = get(zwocam, {'exposure':3.0, 'gain':200, 'bin':2})
+	img = get(zwocam, {'exposure':3.0, 'gain':300, 'bin':4})
 	frame = frame + 1
 
 	img = img / 65535.0

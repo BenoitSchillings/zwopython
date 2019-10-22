@@ -62,13 +62,6 @@ def bin(a, bin_factor):
 	return a.reshape(sh).sum(-1).sum(1)
 
 
-#--------------------------------------------------------
-
-def crop_center(img,crop):
-    y,x = img.shape
-    startx = x//2 - crop//2
-    starty = y//2 - crop//2    
-    return img[starty:starty+crop, startx:startx+crop]
 
 #--------------------------------------------------------
 
@@ -78,39 +71,24 @@ frame = 0
 def mainloop(args):
 	print(args)
 	frame = 0
-	viewer = pg.image(np.zeros((10,10)))
 	center_viewer = pg.image(np.zeros((10,10)))
 
 	while(True):
-		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
-
-		if (args.filename != ''):
-			hdr = fits.header.Header()
-			fits.writeto(args.filename + str(frame) + ".fits", img, hdr, overwrite=True)
+		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':1, 'crop':args.crop})
 		frame = frame + 1
 		vmin = np.min(img)
 		vmax = np.max(img)
 
 
-		viewer.setImage(np.swapaxes(img, 0, 1))
-		center_viewer.setImage(crop_center(np.swapaxes(img, 0, 1), 768))
-
-		#cv2.imshow("image", img)
-		#key = cv2.waitKey(1)
-		#print(key)
-		#if (key == 27 or frame >= args.count):
-		#	camera.close()
-		#	return
+		center_viewer.setImage(np.swapaxes(img, 0, 1))
 
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-f", "--filename", type=str, default = '', help="generic file name")
-	parser.add_argument("-exp", type=float, default = 1.0, help="exposure in seconds (default 1.0)")
+	parser.add_argument("-exp", "--exp", type=float, default = 1.0, help="exposure in seconds (default 1.0)")
 	parser.add_argument("-gain", "--gain", type=int, default = 200, help="camera gain (default 200)")
-	parser.add_argument("-bin", "--bin", type=int, default = 1, help="camera binning (default 1-6)")
-	parser.add_argument("-guide", "--guide", type=int, default = 0, help="frame per guide cycle (0 to disable)")
 	parser.add_argument("-count", "--count", type=int, default = 1000, help="number of frames to capture")
+	parser.add_argument("-crop", "--crop", type=float, default = 0.25, help="number of frames to capture")
 	args = parser.parse_args()
 
 	mainloop(args)

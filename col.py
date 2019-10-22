@@ -72,11 +72,12 @@ zwocam.connect("tcp://localhost:5555")
 #--------------------------------------------------------
 
 while(True):
-	img = get(zwocam, {'exposure':0.1, 'gain':250, 'bin':1})
+	img = get(zwocam, {'exposure':0.91, 'gain':200, 'bin':1})
 	img = img / 65535.0
-	img = img - np.percentile(img, 0)
-	max = np.percentile(img, 50) * 2.5
-	img = img / max
+	img = img - np.min(img)
+	std = img.std() * 15.0
+	range = std
+	img = img / std
 
 	img_crop = crop_collimation_boxes(img)
 
