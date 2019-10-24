@@ -23,5 +23,6 @@ if __name__ == "__main__":
 		time.sleep(3)
 		p1 = sky.GetRaDec()
 		count = count + 1.0
-		print( (float(p0[0]) - float(p1[0])) / count, (float(p0[1]) - float(p1[1])) / count)
+		print( (float(p0[0]) - float(p1[0])) / (count/15.0), (float(p0[1]) - float(p1[1])) / count)
+		print( 15.0*3600.0*(float(p0[0]) - float(p1[0])), 3600.0*(float(p0[1]) - float(p1[1])))
 

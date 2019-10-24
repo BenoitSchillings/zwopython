@@ -6,7 +6,7 @@ import astropy
 from astropy.io import fits
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
-
+import os
 
 
 context = zmq.Context()
@@ -80,13 +80,15 @@ def mainloop(args):
 	frame = 0
 	viewer = pg.image(np.zeros((10,10)))
 	center_viewer = pg.image(np.zeros((10,10)))
+	dirname = args.filename + str(int(time.time()))
+	os.mkdir(dirname)
 
 	while(True):
 		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
 
 		if (args.filename != ''):
 			hdr = fits.header.Header()
-			fits.writeto(args.filename + str(frame) + ".fits", img, hdr, overwrite=True)
+			fits.writeto(dirname + "/" + args.filename + str(frame) + ".fits", img, hdr, overwrite=True)
 		frame = frame + 1
 		vmin = np.min(img)
 		vmax = np.max(img)

@@ -62,7 +62,7 @@ for frame in range(0,len(files)):
 	frame = frame + 1
 
 	sum +=  shifted
-	print(yoff,xoff)
+	print(frame ," of " ,len(files), yoff,xoff)
 	img = sum / 65535.0
 	img = img - np.percentile(img, 3)
 	max = np.percentile(img, 90) * 2.0
@@ -81,6 +81,7 @@ print(images_prop)
 
 
 for frame in range(0,int(len(files)*0.9)):
+	print(frame, " of ", len(files)*0.9)
 	img = fits.getdata(fn(images_prop[frame][0]), ext=0)
 	img = img - dark
 	img = img / flat
