@@ -10,7 +10,7 @@ import zwoasi as asi
 def pool_status():
 	global acamera
 
-	print("running")
+	#print("running")
 
 
 #-------------------------------------------------------
@@ -50,7 +50,7 @@ def init_cam():
 	camera.set_control_value(asi.ASI_BRIGHTNESS, 50)
 	camera.set_control_value(asi.ASI_FLIP, 0)
 	camera.set_control_value(asi.ASI_FLIP, 0)
-	camera.set_control_value(asi.ASI_TARGET_TEMP, -16)
+	camera.set_control_value(asi.ASI_TARGET_TEMP, -18)
 	camera.set_control_value(asi.ASI_COOLER_ON, 1)
 	camera.set_control_value(asi.ASI_HARDWARE_BIN, 1)
 	camera.set_roi(bins=3)
@@ -94,7 +94,18 @@ def server(socket, camera):
 		obj = pool_get(socket)
 		print("Received object", obj)
 		set_params(camera, obj)
-		img = camera.capture()
+
+		has_pic = False
+
+		while(not has_pic):
+			try:
+				img = camera.capture()
+				has_pic = True
+			except:
+				print("failed capture")
+				has_pic = False
+	
+
 		socket.send_pyobj(img)
 
 

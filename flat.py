@@ -70,14 +70,18 @@ def mainloop(args):
 	while(frame < args.count):
 		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
 
-		frame = frame + 1
-		vmin = np.min(img)
+		vmean = np.mean(img)
 		vmax = np.max(img)
-		viewer.setImage(bin(np.swapaxes(img, 0, 1), 3))
-		if (frame == 1):
-			flat_sum = img * 1.0
-		else:
-			flat_sum = flat_sum + img
+		if (vmean != vmax):
+			viewer.setImage(bin(np.swapaxes(img, 0, 1), 3))
+
+		print(vmean)
+		if (vmean < 24000):
+			frame = frame + 1
+			if (frame == 1):
+				flat_sum = img * 1.0
+			else:
+				flat_sum = flat_sum + img
 
 	flat_sum = flat_sum / (frame*1.0)
 	if (args.filename != ''):
@@ -89,7 +93,7 @@ def mainloop(args):
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--filename", type=str, default = '', help="generic file name")
-	parser.add_argument("-exp", "--exp", type=float, default = 1.0, help="exposure in seconds (default 1.0)")
+	parser.add_argument("-exp", "--exp", type=float, default = 0.03, help="exposure in seconds (default 1.0)")
 	parser.add_argument("-gain", "--gain", type=int, default = 10, help="camera gain (default 200)")
 	parser.add_argument("-bin", "--bin", type=int, default = 1, help="camera binning (default 1-6)")
 	parser.add_argument("-guide", "--guide", type=int, default = 0, help="frame per guide cycle (0 to disable)")

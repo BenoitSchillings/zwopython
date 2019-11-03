@@ -78,6 +78,7 @@ def mainloop(args):
 		frame = frame + 1
 		vmin = np.min(img)
 		vmax = np.max(img)
+		print("max ", vmax)
 
 
 		center_viewer.setImage(np.swapaxes(img, 0, 1))
