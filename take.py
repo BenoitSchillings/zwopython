@@ -125,7 +125,7 @@ def mainloop(args):
 			hdr['DEC'] = dec_string
 
 			file_str = dirname + "/" + filename + "_" + str(frame) + ".fits"
-			fits.writeto(file_str, img.astype(np.int16), hdr, overwrite=True)
+			fits.writeto(file_str, img.astype(np.uint16), hdr, overwrite=True)
 			fits.setval(file_str,'DATE',value=str(now.astimezone().isoformat())[:-7] )
 			fits.setval(file_str,'DATE-OBS',value=str(now.astimezone().isoformat())[:-7] )
 			fits.setval(file_str,'EXPTIME',value=args.exp)
