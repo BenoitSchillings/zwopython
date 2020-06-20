@@ -17,7 +17,7 @@ def pool_status():
 
 def pool_get(socket):
 	while(True):
-		count = socket.poll(timeout=300)
+		count = socket.poll(timeout=100)
 		if (count != 0):
 			obj = socket.recv_pyobj()
 			return obj
@@ -42,15 +42,16 @@ def init_cam():
 	print("found camera")
 
 	camera.disable_dark_subtract()
-	camera.set_control_value(asi.ASI_BANDWIDTHOVERLOAD, 60)
+	camera.set_control_value(asi.ASI_BANDWIDTHOVERLOAD, 40)
 
 	camera.set_control_value(asi.ASI_GAIN, 20)
 	camera.set_control_value(asi.ASI_EXPOSURE, int(0.00001*1000000))
 	camera.set_control_value(asi.ASI_GAMMA, 50)
-	camera.set_control_value(asi.ASI_BRIGHTNESS, 50)
+	camera.set_control_value(asi.ASI_BRIGHTNESS, 85)
 	camera.set_control_value(asi.ASI_FLIP, 0)
 	camera.set_control_value(asi.ASI_FLIP, 0)
-	camera.set_control_value(asi.ASI_TARGET_TEMP, -18)
+	camera.set_control_value(asi.ASI_HIGH_SPEED_MODE, 0)
+	camera.set_control_value(asi.ASI_TARGET_TEMP, -11)
 	camera.set_control_value(asi.ASI_COOLER_ON, 1)
 	camera.set_control_value(asi.ASI_HARDWARE_BIN, 1)
 	camera.set_roi(bins=3)
@@ -78,8 +79,10 @@ def set_params(camera, params):
 			print("bin", value)
 			camera.set_roi(bins=int(value))
 		if (param == 'CROP'):
-			vsize = 3520
-			hsize = 4656
+			vsize = 6388#3520
+			hsize = 9576#4656
+			#vsize = 3520
+			#hsize = 4656
 			dv = int(vsize * value)
 			dh = int(hsize * value)
 			dv = dv // 2
@@ -96,6 +99,7 @@ def server(socket, camera):
 		set_params(camera, obj)
 
 		has_pic = False
+		print("temp ", camera.get_control_value(asi.ASI_TEMPERATURE)[0]/10.0)
 
 		while(not has_pic):
 			try:

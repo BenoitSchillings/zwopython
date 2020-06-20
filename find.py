@@ -36,14 +36,20 @@ zwocam = context.socket(zmq.REQ)
 zwocam.connect("tcp://localhost:5555")
 
 #--------------------------------------------------------
+def bin(a):
+	return(a[0:None:2, 0:None:2] + a[1:None:2, 0:None:2] + a[0:None:2, 1:None:2] + a[1:None:2, 1:None:2])
 
 frame = 0
 while(True):
-	img = get(zwocam, {'exposure':8.0, 'gain':300, 'bin':3})
+	img = get(zwocam, {'exposure':1.7, 'gain':251, 'bin':4})
 	frame = frame + 1
 
+	bg = np.percentile(img, 0)
+	print(np.mean(img))
+	
 	img = img / 65535.0
-	img = img - np.percentile(img, 0)
+	img = bin(img)
+	img = img - np.percentile(img, 1)
 	max = np.percentile(img, 90) * 2.0
 	img = img / max
 

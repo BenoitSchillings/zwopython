@@ -16,7 +16,7 @@ app = QtGui.QApplication([])
 
 def pool_get(socket):
 	while(True):
-		count = socket.poll(timeout=100)
+		count = socket.poll(timeout=50)
 		app.processEvents()
 		if (count != 0):
 			obj = socket.recv_pyobj()
@@ -57,10 +57,6 @@ import argparse
 def bin(arr, new_shape):
 	return arr
 
-def proc(arr):
-	return arr
-	return arr / np.flip(arr)
-
 #--------------------------------------------------------
 
 
@@ -77,10 +73,10 @@ def mainloop(args):
 		vmean = np.mean(img)
 		vmax = np.max(img)
 		if (vmean != vmax):
-			viewer.setImage(proc(bin(np.swapaxes(img, 0, 1), 3)))
+			viewer.setImage(bin(np.swapaxes(img, 0, 1), 3))
 
-		print(vmean, frame)
-		if (vmean < 28000):
+		print(vmean)
+		if (vmean < 24000):
 			frame = frame + 1
 			if (frame == 1):
 				flat_sum = img * 1.0
@@ -96,12 +92,12 @@ def mainloop(args):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-f", "--filename", type=str, default = 'ffg', help="generic file name")
-	parser.add_argument("-exp", "--exp", type=float, default = 5, help="exposure in seconds (default 1.0)")
-	parser.add_argument("-gain", "--gain", type=int, default = 251, help="camera gain (default 200)")
+	parser.add_argument("-f", "--filename", type=str, default = 'bias_c4_', help="generic file name")
+	parser.add_argument("-exp", "--exp", type=float, default = 0.00001, help="exposure in seconds (default 1.0)")
+	parser.add_argument("-gain", "--gain", type=int, default = 350, help="camera gain (default 200)")
 	parser.add_argument("-bin", "--bin", type=int, default = 1, help="camera binning (default 1-6)")
 	parser.add_argument("-guide", "--guide", type=int, default = 0, help="frame per guide cycle (0 to disable)")
-	parser.add_argument("-count", "--count", type=int, default = 120, help="number of frames to capture")
+	parser.add_argument("-count", "--count", type=int, default = 550, help="number of frames to capture")
 	args = parser.parse_args()
 
 	mainloop(args)

@@ -57,10 +57,6 @@ import argparse
 def bin(arr, new_shape):
 	return arr
 
-def proc(arr):
-	return arr
-	return arr / np.flip(arr)
-
 #--------------------------------------------------------
 
 
@@ -72,20 +68,28 @@ def mainloop(args):
 	viewer = pg.image(np.zeros((10,10)))
 
 	while(frame < args.count):
-		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img1 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img2 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img3 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img4 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img5 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img6 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img7 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img8 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
+		img9 = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
 
+		img = np.std([img1,img2,img3, img4, img5, img6, img7, img8, img9], axis=0)
 		vmean = np.mean(img)
 		vmax = np.max(img)
 		if (vmean != vmax):
-			viewer.setImage(proc(bin(np.swapaxes(img, 0, 1), 3)))
+			viewer.setImage(bin(np.swapaxes(img, 0, 1), 3))
 
-		print(vmean, frame)
-		if (vmean < 28000):
-			frame = frame + 1
-			if (frame == 1):
-				flat_sum = img * 1.0
-			else:
-				flat_sum = flat_sum + img
+		print(vmean, np.std(img))
+		frame = frame + 1
+		if (frame == 1):
+			flat_sum = img * 1.0
+		else:
+			flat_sum = flat_sum + img
 
 	flat_sum = flat_sum / (frame*1.0)
 	if (args.filename != ''):
@@ -96,12 +100,12 @@ def mainloop(args):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-f", "--filename", type=str, default = 'ffg', help="generic file name")
-	parser.add_argument("-exp", "--exp", type=float, default = 5, help="exposure in seconds (default 1.0)")
-	parser.add_argument("-gain", "--gain", type=int, default = 251, help="camera gain (default 200)")
+	parser.add_argument("-f", "--filename", type=str, default = 'std2', help="generic file name")
+	parser.add_argument("-exp", "--exp", type=float, default = 0.01, help="exposure in seconds (default 1.0)")
+	parser.add_argument("-gain", "--gain", type=int, default = 101, help="camera gain (default 200)")
 	parser.add_argument("-bin", "--bin", type=int, default = 1, help="camera binning (default 1-6)")
 	parser.add_argument("-guide", "--guide", type=int, default = 0, help="frame per guide cycle (0 to disable)")
-	parser.add_argument("-count", "--count", type=int, default = 120, help="number of frames to capture")
+	parser.add_argument("-count", "--count", type=int, default = 50, help="number of frames to capture")
 	args = parser.parse_args()
 
 	mainloop(args)

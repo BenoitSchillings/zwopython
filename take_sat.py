@@ -10,7 +10,6 @@ import os
 import skyx
 import datetime
 from coo import *
-import random
 
 
 context = zmq.Context()
@@ -91,6 +90,14 @@ def mainloop(args):
 	dirname = args.filename
 
 
+	flat = fits.getdata("flat_100_50.fits", ext=0)
+	bias = fits.getdata("bias.fits", ext=0)
+	dark = fits.getdata("dark.fits", ext=0)
+
+	#flat = flat - bias
+	flat = flat / flat.mean()
+
+
 	if (not os.path.isdir(dirname)):
 		os.mkdir(dirname)
 
@@ -98,14 +105,11 @@ def mainloop(args):
 
 	while(img_number < args.count):
 		img_number = img_number + 1
-		if (img_number % 8 == 0 and img_number <580):
-			#sky.goto(float(p0[0]) - random.random() / 300.0,float(p0[1]) - random.random() / 60.0)
-			sky.bump(random.random() - 0.5, random.random() - 0.5)
-			time.sleep(3)
 
 		now = datetime.datetime.now(datetime.timezone.utc)
 		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
-		print(img)
+		img = img - dark
+		img = img / flat
 
 		img = img / 2.0
 
@@ -129,8 +133,7 @@ def mainloop(args):
 
 
 		viewer.setImage(np.swapaxes(bin(img.astype(float)), 0, 1))
-		center_viewer.setImage(crop_center(np.swapaxes(img, 0, 1), 1768))
-	sky.stop()
+		center_viewer.setImage(crop_center(np.swapaxes(img, 0, 1), 768))
 
 
 
@@ -138,7 +141,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-f", "--filename", type=str, default = '', help="generic file name")
 	parser.add_argument("-exp", type=float, default = 1.0, help="exposure in seconds (default 1.0)")
-	parser.add_argument("-gain", "--gain", type=int, default = 101, help="camera gain (default 200)")
+	parser.add_argument("-gain", "--gain", type=int, default = 200, help="camera gain (default 200)")
 	parser.add_argument("-bin", "--bin", type=int, default = 1, help="camera binning (default 1-6)")
 	parser.add_argument("-guide", "--guide", type=int, default = 0, help="frame per guide cycle (0 to disable)")
 	parser.add_argument("-count", "--count", type=int, default = 100, help="number of frames to capture")

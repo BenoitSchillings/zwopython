@@ -78,7 +78,7 @@ def mainloop(args):
 		frame = frame + 1
 		vmin = np.min(img)
 		vmax = np.max(img)
-		print("max ", vmax)
+		print("max ", vmax, np.mean(img))
 
 
 		center_viewer.setImage(np.swapaxes(img, 0, 1))
@@ -86,7 +86,7 @@ def mainloop(args):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-exp", "--exp", type=float, default = 1.0, help="exposure in seconds (default 1.0)")
+	parser.add_argument("-exp", "--exp", type=float, default = 0.1, help="exposure in seconds (default 1.0)")
 	parser.add_argument("-gain", "--gain", type=int, default = 200, help="camera gain (default 200)")
 	parser.add_argument("-count", "--count", type=int, default = 1000, help="number of frames to capture")
 	parser.add_argument("-crop", "--crop", type=float, default = 0.25, help="number of frames to capture")

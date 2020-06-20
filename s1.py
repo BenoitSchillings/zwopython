@@ -52,16 +52,14 @@ sum = np.empty_like(img0, dtype=float)
 
 flat = fits.getdata("flat.fits", ext=0)
 bias = fits.getdata("bias.fits", ext=0) * 2.0
-dark = fits.getdata("dark.fits", ext=0)
-skyf = fits.getdata("skyf.fits", ext=0)
+dark = fits.getdata("bias.fits", ext=0)
 flat = flat - bias
 
 print("bias", dark.mean())
 
 flat = flat / np.mean(flat)
 
-img0 = img0 - dark
-img0 = img0 / flat
+#img0 = img0 - dark
 ref_level = np.percentile(img0, 20)
 
 
@@ -73,9 +71,8 @@ for frame in range(0, len(files)):
 	img = fits.getdata(fn(frame), ext=0) * 2.0
 	
 	img = img - dark
-	img = img / flat
 	ref_level1 = np.percentile(img, 20)
-	#img = img / (skyf/(8000.0))
+	img = img / (flat)
 
 	print("mean ", img.mean())
 	yoff,xoff = image_registration.cross_correlation_shifts(crop_center(img, 1024), crop_center(img0, 1024))
@@ -101,7 +98,7 @@ for frame in range(0, len(files)):
 	img = img / max
 	print(max)
 
-	cv2.imshow("image", 0.03 + bin(bin(img)))
+	cv2.imshow("image", 0.03 + (bin(img)))
 	key = cv2.waitKey(1)
 
 hdr = fits.header.Header()
@@ -116,15 +113,15 @@ print(images_prop)
 for frame in range(0,int(len(files)*0.92), 3):
 	print(frame, " of ", len(files)*0.92)
 	img = fits.getdata(fn(images_prop[frame][0]), ext=0)
-	img = img - dark
-	img = img / flat
+	#img = img - dark
+	#img = img / flat
 
 	shifted0 = np.roll(np.roll(img,int(round(images_prop[frame][2])),1),int(round(images_prop[frame][1])),0)
 
 
 	img =fits.getdata(fn(images_prop[frame+1][0]), ext=0)
-	img = img - dark
-	img = img / flat
+	#img = img - dark
+	#img = img / flat
 
 	shifted1 = np.roll(np.roll(img,int(round(images_prop[frame+1][2])),1),int(round(images_prop[frame+1][1])),0)
 

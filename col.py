@@ -34,8 +34,8 @@ def crop_collimation_boxes(image):
 	size_y = image.shape[0]
 	print(size_x, size_y)
 
-	box_x = size_x // 16
-	box_y = size_y // 16
+	box_x = size_x // 24 
+	box_y = size_y // 24 
 
 	out = np.ones((box_y * 3, box_x * 3), dtype=float)
 
@@ -72,17 +72,18 @@ zwocam.connect("tcp://localhost:5555")
 #--------------------------------------------------------
 
 while(True):
-	img = get(zwocam, {'exposure':0.91, 'gain':200, 'bin':1})
+	img = get(zwocam, {'exposure':1.9, 'gain':201, 'bin':1})
 	img = img / 65535.0
-	img = img - np.min(img)
-	std = img.std() * 15.0
+	img = img - np.percentile(img, 1) 
+    
+	std = img.std() * 10.0
 	range = std
 	img = img / std
 
 	img_crop = crop_collimation_boxes(img)
 
 
-	cv2.imshow("image", img_crop)
+	cv2.imshow("image", img_crop + 0.1)
 	key = cv2.waitKey(1)
 	print(key)
 	if (key == 27):

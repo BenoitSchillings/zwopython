@@ -16,7 +16,7 @@ app = QtGui.QApplication([])
 
 def pool_get(socket):
 	while(True):
-		count = socket.poll(timeout=100)
+		count = socket.poll(timeout=50)
 		app.processEvents()
 		if (count != 0):
 			obj = socket.recv_pyobj()
@@ -54,12 +54,14 @@ def status(pos, image, legend, value):
 import argparse
 #--------------------------------------------------------
 
-def bin(arr, new_shape):
-	return arr
+def bin(a, bin_factor):
+	shape = a.shape
+	s0 = a.shape[0] // bin_factor
+	s1 = a.shape[1] // bin_factor
+	sh = s0,a.shape[0]//s0,s1,a.shape[1]//s1
+	return a.reshape(sh).sum(-1).sum(1)
 
-def proc(arr):
-	return arr
-	return arr / np.flip(arr)
+
 
 #--------------------------------------------------------
 
@@ -69,39 +71,25 @@ frame = 0
 def mainloop(args):
 	print(args)
 	frame = 0
-	viewer = pg.image(np.zeros((10,10)))
+	center_viewer = pg.image(np.zeros((10,10)))
 
-	while(frame < args.count):
-		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':args.bin})
-
-		vmean = np.mean(img)
+	while(True):
+		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':1, 'crop':args.crop})
+		frame = frame + 1
+		vmin = np.min(img)
 		vmax = np.max(img)
-		if (vmean != vmax):
-			viewer.setImage(proc(bin(np.swapaxes(img, 0, 1), 3)))
+		print("max ", vmax)
 
-		print(vmean, frame)
-		if (vmean < 28000):
-			frame = frame + 1
-			if (frame == 1):
-				flat_sum = img * 1.0
-			else:
-				flat_sum = flat_sum + img
 
-	flat_sum = flat_sum / (frame*1.0)
-	if (args.filename != ''):
-		hdr = fits.header.Header()
-		fits.writeto(args.filename + str(frame) + ".fits", flat_sum.astype(np.float32), hdr, overwrite=True)
-		
+		center_viewer.setImage(np.swapaxes(img, 0, 1))
 
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-f", "--filename", type=str, default = 'ffg', help="generic file name")
-	parser.add_argument("-exp", "--exp", type=float, default = 5, help="exposure in seconds (default 1.0)")
-	parser.add_argument("-gain", "--gain", type=int, default = 251, help="camera gain (default 200)")
-	parser.add_argument("-bin", "--bin", type=int, default = 1, help="camera binning (default 1-6)")
-	parser.add_argument("-guide", "--guide", type=int, default = 0, help="frame per guide cycle (0 to disable)")
-	parser.add_argument("-count", "--count", type=int, default = 120, help="number of frames to capture")
+	parser.add_argument("-exp", "--exp", type=float, default = 0.1, help="exposure in seconds (default 1.0)")
+	parser.add_argument("-gain", "--gain", type=int, default = 200, help="camera gain (default 200)")
+	parser.add_argument("-count", "--count", type=int, default = 1000, help="number of frames to capture")
+	parser.add_argument("-crop", "--crop", type=float, default = 0.25, help="number of frames to capture")
 	args = parser.parse_args()
 
 	mainloop(args)
