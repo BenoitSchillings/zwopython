@@ -41,7 +41,7 @@ def bin(a):
 
 frame = 0
 while(True):
-	img = get(zwocam, {'exposure':1.7, 'gain':251, 'bin':4})
+	img = get(zwocam, {'exposure':0.2, 'gain':351, 'bin':4})
 	frame = frame + 1
 
 	bg = np.percentile(img, 0)

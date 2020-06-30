@@ -58,6 +58,7 @@ flat = flat - bias
 print("bias", dark.mean())
 
 flat = flat / np.mean(flat)
+flat = flat + 0.0001
 
 #img0 = img0 - dark
 ref_level = np.percentile(img0, 20)
