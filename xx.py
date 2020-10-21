@@ -1,97 +1,122 @@
+import time
 import zmq
 import numpy as np
-import time
-import cv2
-import astropy
-from astropy.io import fits
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
+import zwoasi as asi
 
 
+#-------------------------------------------------------
 
-context = zmq.Context()
-app = QtGui.QApplication([])
 
-#--------------------------------------------------------
+def pool_status():
+	global acamera
+
+	#print("running")
+
+
+#-------------------------------------------------------
 
 def pool_get(socket):
 	while(True):
-		count = socket.poll(timeout=50)
-		app.processEvents()
+		count = socket.poll(timeout=100)
 		if (count != 0):
 			obj = socket.recv_pyobj()
 			return obj
 
+		pool_status()
 
-#--------------------------------------------------------
+#-------------------------------------------------------
 
 
-def get(socket, params):
-	socket.send_pyobj(params)
+def init_cam():
+	asi.init(".\\ASICamera2.dll")
 
-	obj = pool_get(socket)
-	return obj
+	num_cameras = asi.get_num_cameras()
+	if num_cameras == 0:
+		print('No cameras found')
+		sys.exit(0)
 
-#--------------------------------------------------------
+	cameras_found = asi.list_cameras()  # Models names of the connected cameras
+	camera_id = 0
 
-zwocam = context.socket(zmq.REQ)
-zwocam.connect("tcp://localhost:5555")
+	camera = asi.Camera(camera_id)
+	print("found camera")
 
-#--------------------------------------------------------
+	camera.disable_dark_subtract()
+	camera.set_control_value(asi.ASI_BANDWIDTHOVERLOAD, 40)
 
-def status(pos, image, legend, value):
-	pos = 20 + pos * 25
-    
-	cv2.rectangle(image, (20, pos), (20+200, pos + 20), (0.0, 0.0, 0.0), -1)
-	cv2.rectangle(image, (20, pos), (20+200, pos + 20), (1.0, 1.0, 1.0), 1)
+	camera.set_control_value(asi.ASI_GAIN, 20)
+	camera.set_control_value(asi.ASI_EXPOSURE, int(0.00001*1000000))
+	camera.set_control_value(asi.ASI_GAMMA, 50)
+	camera.set_control_value(asi.ASI_BRIGHTNESS, 85)
+	camera.set_control_value(asi.ASI_FLIP, 0)
+	camera.set_control_value(asi.ASI_FLIP, 0)
+	camera.set_control_value(asi.ASI_HIGH_SPEED_MODE, 0)
+	camera.set_control_value(asi.ASI_HARDWARE_BIN, 1)
+	camera.set_roi(bins=3)
+	camera.set_image_type(asi.ASI_IMG_RAW16)
+	print("ready")
+	return camera
 
-	cv2.putText(image, legend, (30, pos + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (1.0, 1.0, 1.0)) 
-	size = cv2.getTextSize(value, fontScale = 0.5, fontFace = cv2.FONT_HERSHEY_SIMPLEX, thickness=1)
+#-------------------------------------------------------
+
+def set_params(camera, params):
+	def clip8(value):
+		value = value - (value % 8)
+		return value
+
+
+	for param in params:
+		value = params[param]
+		param = param.upper()
+
+		if (param == 'EXPOSURE'):
+			camera.set_control_value(asi.ASI_EXPOSURE, int(value*1000000))
+		if (param == 'GAIN'):
+			camera.set_control_value(asi.ASI_GAIN, int(value))
+		if (param == 'BIN'):
+			print("bin", value)
+			camera.set_roi(bins=int(value))
+		if (param == 'CROP'):
+			vsize = 6388#3520
+			hsize = 9576#4656
+			vsize = 1520
+			hsize = 1656
+			dv = int(vsize * value)
+			dh = int(hsize * value)
+			dv = dv // 2
+			dh = dh // 2
+			camera.set_roi(start_x=clip8(hsize//2 - dh), start_y=clip8(vsize//2 - dv), width=clip8(dh*2), height=clip8(dv*2))
+		
+
+#-------------------------------------------------------
+
+def server(socket, camera):
+	while True:
+		obj = pool_get(socket)
+		print("Received object", obj)
+		set_params(camera, obj)
+
+		has_pic = False
+		print("temp ", camera.get_control_value(asi.ASI_TEMPERATURE)[0]/10.0)
+
+		while(not has_pic):
+			try:
+				img = camera.capture()
+				has_pic = True
+			except:
+				print("failed capture")
+				has_pic = False
 	
-	cv2.putText(image, value, (200  - size[0][0], pos + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (1.0, 1.0, 1.0)) 
 
-#--------------------------------------------------------
-import argparse
-#--------------------------------------------------------
-
-def bin(a, bin_factor):
-	shape = a.shape
-	s0 = a.shape[0] // bin_factor
-	s1 = a.shape[1] // bin_factor
-	sh = s0,a.shape[0]//s0,s1,a.shape[1]//s1
-	return a.reshape(sh).sum(-1).sum(1)
+		socket.send_pyobj(img)
 
 
+#-------------------------------------------------------
 
-#--------------------------------------------------------
-
-
-frame = 0
-
-def mainloop(args):
-	print(args)
-	frame = 0
-	center_viewer = pg.image(np.zeros((10,10)))
-
-	while(True):
-		img = get(zwocam, {'exposure': args.exp, 'gain':args.gain, 'bin':1, 'crop':args.crop})
-		frame = frame + 1
-		vmin = np.min(img)
-		vmax = np.max(img)
-		print("max ", vmax)
-
-
-		center_viewer.setImage(np.swapaxes(img, 0, 1))
-
-
-if __name__ == "__main__":
-	parser = argparse.ArgumentParser()
-	parser.add_argument("-exp", "--exp", type=float, default = 0.1, help="exposure in seconds (default 1.0)")
-	parser.add_argument("-gain", "--gain", type=int, default = 200, help="camera gain (default 200)")
-	parser.add_argument("-count", "--count", type=int, default = 1000, help="number of frames to capture")
-	parser.add_argument("-crop", "--crop", type=float, default = 0.25, help="number of frames to capture")
-	args = parser.parse_args()
-
-	mainloop(args)
-
+print("server")
+acamera = init_cam()
+context = zmq.Context()
+socket = context.socket(zmq.REP)
+socket.bind("tcp://*:5555")
+server(socket, acamera)
 

@@ -4,7 +4,7 @@ import time
 import cv2
 import astropy
 from astropy.io import fits
-
+import argparse
 
 
 context = zmq.Context()
@@ -40,8 +40,19 @@ def bin(a):
 	return(a[0:None:2, 0:None:2] + a[1:None:2, 0:None:2] + a[0:None:2, 1:None:2] + a[1:None:2, 1:None:2])
 
 frame = 0
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-exp", "--exp", type=float, default = 0.1, help="exposure in seconds (default 0.1)")
+parser.add_argument("-gain", "--gain", type=int, default = 300, help="camera gain (default 300)")
+parser.add_argument("-bin", "--bin", type=int, default = 4, help="binning (default 4)")
+
+args = parser.parse_args()
+
+
+
 while(True):
-	img = get(zwocam, {'exposure':0.2, 'gain':351, 'bin':4})
+	img = get(zwocam, {'exposure':args.exp, 'gain':args.gain, 'bin':args.bin})
 	frame = frame + 1
 
 	bg = np.percentile(img, 0)

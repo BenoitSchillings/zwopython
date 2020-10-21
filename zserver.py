@@ -51,7 +51,7 @@ def init_cam():
 	camera.set_control_value(asi.ASI_FLIP, 0)
 	camera.set_control_value(asi.ASI_FLIP, 0)
 	camera.set_control_value(asi.ASI_HIGH_SPEED_MODE, 0)
-	camera.set_control_value(asi.ASI_TARGET_TEMP, -11)
+	camera.set_control_value(asi.ASI_TARGET_TEMP, -14)
 	camera.set_control_value(asi.ASI_COOLER_ON, 1)
 	camera.set_control_value(asi.ASI_HARDWARE_BIN, 1)
 	camera.set_roi(bins=3)
