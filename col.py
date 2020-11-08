@@ -72,7 +72,7 @@ zwocam.connect("tcp://localhost:5555")
 #--------------------------------------------------------
 
 while(True):
-	img = get(zwocam, {'exposure':1.9, 'gain':301, 'bin':1})
+	img = get(zwocam, {'exposure':0.5, 'gain':301, 'bin':1})
 	img = img / 65535.0
 	img = img - np.percentile(img, 1) 
     

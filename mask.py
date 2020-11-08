@@ -12,8 +12,8 @@ def bin(a):
 	return(a[0:None:2, 0:None:2] + a[1:None:2, 0:None:2] + a[0:None:2, 1:None:2] + a[1:None:2, 1:None:2])
 
 def clip(a):
-	return a
-	result = ndimage.minimum_filter(gaussian_filter(a, 2), size=40)
+	#return a
+	result = ndimage.minimum_filter(gaussian_filter(a, 4), size=130)
 	#bg = np.percentile(a, 45)
 	#print(bg)
 	#return(np.clip(a, -1e9, bg))

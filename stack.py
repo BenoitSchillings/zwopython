@@ -74,7 +74,7 @@ images_prop = np.array([], dtype=img_prop)
 for frame in range(0, len(files)):
 	img = fits.getdata(fn(frame), ext=0) * 2.0
 	
-	img = img - dark
+	img = img - (dark + 4.0)
 	img = img / flat
 	ref_level1 = np.percentile(img, 20)
 

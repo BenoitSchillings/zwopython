@@ -63,7 +63,7 @@ def bin(a, bin_factor):
 
 
 def crop_max(img, size):
-    loc = cv2.minMaxLoc(img)[2]
+    loc = cv2.minMaxLoc(cv2.GaussianBlur(img, (5, 5), 0))[3]
     top = loc[1] - size
     bottom = loc[1] + size
     left = loc[0] - size
@@ -93,7 +93,7 @@ def mainloop(args):
         vmin = np.min(img)
         vmax = np.max(img)
         print("max ", vmax, np.mean(img))
-        crop = crop_max(img, 50)
+        crop = crop_max(img, 40)
         center_viewer.setImage(np.swapaxes(crop, 0, 1))
 
 

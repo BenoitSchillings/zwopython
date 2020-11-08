@@ -88,7 +88,7 @@ def mainloop(args):
     viewer = pg.image(np.zeros((10,10)))
     center_viewer = pg.image(np.zeros((10,10)))
     filename = args.filename + str(int(time.time()))
-    dirname = args.filename
+    dirname = 'e:\\' + args.filename
 
 
     if (not os.path.isdir(dirname)):
